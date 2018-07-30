@@ -1,0 +1,32 @@
+#apiVersion: apps/v1
+apiVersion: extensions/v1beta1
+kind: Deployment
+
+metadata:
+  name: c3
+  labels:
+    comp: c3
+
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      comp: c3
+  template:
+    metadata:
+      labels:
+        comp: c3
+    spec:
+      containers:
+      - name: main
+        image: opsani/co-http:latest
+        args: [ 'busy=30&call=c2' ]  # 25
+        resources:
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        ports:
+          - containerPort: 8080
+      nodeSelector:
+        oco: "3"
