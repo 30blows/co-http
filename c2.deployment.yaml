@@ -21,7 +21,7 @@ spec:
       containers:
       - name: main
         image: opsani/co-http:latest
-        args: [ 'busy=150&call=c1' ]  # 150
+        args: [ 'busy=150&call=c1' ]  # 150 work units
         resources:
           limits:
             cpu: 250m
