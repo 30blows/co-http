@@ -21,12 +21,12 @@ spec:
       containers:
       - name: main
         image: opsani/co-http:latest
-        args: [ 'busy=0&call=c3' ]   # 1
+        args: [busy=0&call=c3]       # 1
         resources:
           limits:
-            cpu: 250m
+            cpu: 304m
             memory: 256Mi
         ports:
-          - containerPort: 8080
+        - containerPort: 8080
       nodeSelector:
-        oco: "4"
+        oco: '4'
