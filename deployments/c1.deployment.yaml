@@ -25,8 +25,8 @@ spec:
         resources:
           limits:   # testA
             # testB
-            cpu: 301m  # testC
-            memory: 256Mi  # testD
+            cpu: 0.5   # testC
+            memory: 305.0Mi # testD
         ports:  # testE
         - containerPort: 8080
       nodeSelector:
