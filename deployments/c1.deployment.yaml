@@ -31,4 +31,3 @@ spec:
         - containerPort: 8080
       nodeSelector:
         oco: '1'
-cat: 2
