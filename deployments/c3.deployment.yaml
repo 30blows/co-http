@@ -24,8 +24,8 @@ spec:
         args: [busy=30&call=c2]      # 30 work units
         resources:
           limits:
-            cpu: 0.5
-            memory: 505.0Mi
+            cpu: 0.6
+            memory: 506.0Mi
         ports:
         - containerPort: 8080
       nodeSelector:
