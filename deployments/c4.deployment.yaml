@@ -24,7 +24,7 @@ spec:
         args: [busy=0&call=c3]       # 1
         resources:
           limits:
-            cpu: 0.64
+            cpu: 0.6
             memory: 256Mi
         ports:
         - containerPort: 8080
