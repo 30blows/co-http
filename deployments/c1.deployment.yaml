@@ -26,8 +26,9 @@ spec:
           limits:   # testA
             # testB
             cpu: '0.60' # testC
-            memory: 256Mi  # testD
+            memory: 257.2  # testD
         ports:  # testE
         - containerPort: 8080
       nodeSelector:
         oco: '1'
+cat: 2
