@@ -1,0 +1,26 @@
+main_uswest1:
+  cpus: 7
+  env:
+    APACHE_WORKERS: '13' # (13 Workers + 2 mules + master) * 900MB MAX + error pages (600MB max)
+                         # apache is roughly 15GB in the worst case scenario. we bet on 13.5
+                         # as this is the maximum size to fit 2 containers on a c4.4xlarge
+    LISTENADDRESS: '0.0.0.0'
+    UWSGI_ADDR: '127.0.0.1'
+  instances: 20
+  registrations: ["yelp-main.main_ro", "yelp-main.main", "yelp-main.canary"]
+  bounce_margin_factor: 0.33 # Help the bounce go faster by allowing under-replication during bounces.
+  mem: 13500
+  disk: 2048
+  extra_volumes:
+    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+    - {containerPath: /nail/live/private, hostPath: /nail/live/private, mode: RO}
+    - {containerPath: /nail/etc/ssl, hostPath: /nail/etc/ssl, mode: RO}
+    - {containerPath: /nail/opt, hostPath: /nail/opt, mode: RO}
+  deploy_group: 'stagef.webs'
+  replication_threshold: 33
+  healthcheck_uri: /status
+  monitoring:
+    irc_channels:
+      - yelp
+    page: false
