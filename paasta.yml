@@ -1,5 +1,5 @@
 main_uswest1:
-  cpus: 7
+  cpus: 11
   env:
     APACHE_WORKERS: '13' # (13 Workers + 2 mules + master) * 900MB MAX + error pages (600MB max)
                          # apache is roughly 15GB in the worst case scenario. we bet on 13.5
