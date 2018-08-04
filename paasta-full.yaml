@@ -1,7 +1,7 @@
 main_uswest1: &main_template
-  cpus: 8
+  cpus: 2
   env:
-    APACHE_WORKERS: '8'
+    APACHE_WORKERS: '11'
     LISTENADDRESS: '0.0.0.0'
     UWSGI_ADDR: '127.0.0.1'
   min_instances: 2
@@ -15,10 +15,15 @@ main_uswest1: &main_template
     good_enough_window: [0.45, 0.55]
   registrations: ["yelp-main.main_ro", "yelp-main.main", "yelp-main.canary"]
   bounce_margin_factor: 0.33 # Help the bounce go faster by allowing under-replication during bounces.
-  mem: 8500
+  mem: 13501
   disk: 2048
   extra_volumes:
-    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}   - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}   - {containerPath: /nail/live/private, hostPath: /nail/live/private, mode: RO}   - {containerPath: /nail/etc/ssl, hostPath: /nail/etc/ssl, mode: RO}   - {containerPath: /nail/opt, hostPath: /nail/opt, mode: RO} deploy_group: 'stageg.webs'
+    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+    - {containerPath: /nail/live/private, hostPath: /nail/live/private, mode: RO}
+    - {containerPath: /nail/etc/ssl, hostPath: /nail/etc/ssl, mode: RO}
+    - {containerPath: /nail/opt, hostPath: /nail/opt, mode: RO}
+  deploy_group: 'stageg.webs'
   replication_threshold: 33
   monitoring:
     slack_channels:
@@ -84,7 +89,9 @@ ordering_swf_activity_runner: &ordering_swf_runner
     runbook: "http://y/ordering"
     page: false
   extra_volumes:
-    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}   - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO} autoscaling:
+    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+  autoscaling:
     metrics_provider: mesos_cpu
     setpoint: 0.3
 
@@ -113,10 +120,12 @@ bulk_update_sfn_activity_worker:
     notification_email: false
     slack_channels: ['revenue']
   extra_volumes:
-    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}   - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
 
 # Revenue Workers
-revenue_program_order_receipt_kafka_consumer: &revenue_worker cpus: 0.1
+revenue_program_order_receipt_kafka_consumer: &revenue_worker
+  cpus: 0.1
   mem: 5000
   monitoring:
     team: revenue
@@ -128,7 +137,8 @@ revenue_program_order_receipt_kafka_consumer: &revenue_worker cpus: 0.1
   deploy_group: 'stageg'
   instances: 1
   extra_volumes:
-    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO} cmd: exec dumb-init python -m batch.billing.ordering_kafka_consumers.program_order_receipt_kafka_consumer --rolling-restart-wait-time 120 --no-daemon start
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+  cmd: exec dumb-init python -m batch.billing.ordering_kafka_consumers.program_order_receipt_kafka_consumer --rolling-restart-wait-time 120 --no-daemon start
 
 revenue_program_order_receipt_fallback_consumer:
   <<: *revenue_worker
@@ -162,7 +172,9 @@ bulk_update_kew_worker: &bulk_update_kew_worker
     notification_email: false
     slack_channels: ['revenue-notifications']
   extra_volumes:
-    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}   - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO} cmd: 'exec dumb-init python batch/kew_workers/bulk_update_worker.py --no-daemon start'
+    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+  cmd: 'exec dumb-init python batch/kew_workers/bulk_update_worker.py --no-daemon start'
 
 bulk_update_program_kew_worker:
   <<: *bulk_update_kew_worker
@@ -244,9 +256,12 @@ sfn_create_guest_user_worker: &sfn_worker
     page: false
   bounce_method: 'brutal'
   extra_volumes:
-    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}   - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}   - {containerPath: /nail/opt, hostPath: /nail/opt, mode: RO}
+    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+    - {containerPath: /nail/opt, hostPath: /nail/opt, mode: RO}
 
-sfn_gh_record_payment_program: <<: *sfn_worker
+sfn_gh_record_payment_program:
+  <<: *sfn_worker
   cmd: 'exec dumb-init python yelp/ordering/batch/step_functions/activities/record_submit.py --no-daemon start'
 
 sfn_gh_bills_for_purchase:
@@ -274,9 +289,11 @@ batch_payment_worker: &batch_payment_worker
     runbook: "http://y/async_payments"
     page: false
   extra_volumes:
-    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}   - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
 
-consumer_payment_worker: <<: *batch_payment_worker
+consumer_payment_worker:
+  <<: *batch_payment_worker
   cmd: 'exec dumb-init python yelp/component/payment/batch/payment_worker.py --no-daemon start --queue=CONSUMER'
 
 sfn_ad_campaign_bookkeeping_worker: &sfn_subscription_billing_worker
@@ -294,9 +311,11 @@ sfn_ad_campaign_bookkeeping_worker: &sfn_subscription_billing_worker
   bounce_health_params:
     min_task_uptime: 30
   extra_volumes:
-    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}   - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
 
-sfn_business_ad_bookkeeping_worker: <<: *sfn_subscription_billing_worker
+sfn_business_ad_bookkeeping_worker:
+  <<: *sfn_subscription_billing_worker
   cmd: 'exec dumb-init python yelp/component/billing/step_functions/activities/business_ad_bookkeeping.py --no-daemon start'
 
 sfn_business_page_bookkeeping_worker:
@@ -471,9 +490,11 @@ sfn_subscription_billing_invoice_worker: &sfn_payment_worker
   bounce_health_params:
     min_task_uptime: 30
   extra_volumes:
-    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}   - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
 
-sfn_subscription_billing_invoice_large_account_worker: <<: *sfn_payment_worker
+sfn_subscription_billing_invoice_large_account_worker:
+  <<: *sfn_payment_worker
   cpus: 1
   instances: 5
   mem: 2000
@@ -512,7 +533,10 @@ prepaid_create_payment_program_feature:
   disk: 1200
   deploy_group: 'stageg'
   extra_volumes:
-    - {containerPath: /var/run/fusebox, hostPath: /var/run/fusebox, mode: RO}   - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}   - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO} monitoring:
+    - {containerPath: /var/run/fusebox, hostPath: /var/run/fusebox, mode: RO}
+    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+  monitoring:
     page: false
     ticket: false
     alert_after: 4m
@@ -540,7 +564,9 @@ competitor_analysis_worker:
   mem: 1000
   cmd: 'exec dumb-init python batch/kew_workers/competitor_analysis_worker.py --nodaemon start'
   extra_volumes:
-    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}   - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO} deploy_group: 'stageg'
+    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+  deploy_group: 'stageg'
   bounce_method: 'brutal'
   monitoring:
     alert_after: 20m
@@ -555,7 +581,9 @@ share_of_voice_worker:
   mem: 1000
   cmd: 'exec dumb-init python batch/kew_workers/share_of_voice_worker.py --nodaemon start'
   extra_volumes:
-    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}   - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO} deploy_group: 'stageg'
+    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+  deploy_group: 'stageg'
   bounce_method: 'brutal'
   monitoring:
     alert_after: 20m
@@ -570,7 +598,9 @@ account_time_range_report_worker:
   mem: 1000
   cmd: 'exec dumb-init python -m batch.kew_workers.account_time_range_report_worker --nodaemon start'
   extra_volumes:
-    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}   - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO} deploy_group: 'stageg'
+    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+  deploy_group: 'stageg'
   bounce_method: 'brutal'
   monitoring:
     alert_after: 20m
@@ -585,7 +615,9 @@ flattened_account_time_range_report_worker:
   mem: 1000
   cmd: 'exec dumb-init python -m batch.kew_workers.flattened_account_time_range_report_worker --nodaemon start'
   extra_volumes:
-    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}   - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO} deploy_group: 'stageg'
+    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+  deploy_group: 'stageg'
   monitoring:
     team: biz_national
     page: false
@@ -608,7 +640,8 @@ aggregate_payment_account_review_edited_worker:
   extra_volumes:
     - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
 
-aggregate_payment_account_review_worker: cpus: 0.1
+aggregate_payment_account_review_worker:
+  cpus: 0.1
   instances: 2
   mem: 700
   cmd: 'exec dumb-init python batch/kew_workers/aggregate_payment_account_review_worker.py --no-daemon start --no-crash-worker-on-failure'
@@ -627,7 +660,8 @@ aggregate_payment_account_review_worker: cpus: 0.1
 
 # ---- Begin data quality batch workers ----
 
-business_merge_kew_worker: &data_quality_worker cpus: 0.3
+business_merge_kew_worker: &data_quality_worker
+  cpus: .3
   mem: 2000
   deploy_group: 'stageg'
   monitoring:
@@ -654,14 +688,16 @@ web_alerts_viewed_worker:
   mem: 500
   cmd: 'exec dumb-init python batch/kew_workers/web_alerts_viewed_worker.py --nodaemon start'
   extra_volumes:
-    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}   - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO} deploy_group: 'stageg'
+    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+  deploy_group: 'stageg'
   bounce_method: 'brutal'
   monitoring:
     alert_after: 20m
     team: readerx
 
 rematch_content_for_menu_kew_worker:
-  cpus: 0.5
+  cpus: .50
   mem: 1024
   disk: 2048
   min_instances: 10
@@ -860,7 +896,8 @@ conversation_user_reply_worker: &messaging_worker
   extra_volumes:
     - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
 
-create_r2r_conversation_worker: <<: *messaging_worker
+create_r2r_conversation_worker:
+  <<: *messaging_worker
   cmd: 'exec dumb-init python batch/kew_workers/create_r2r_conversation_worker.py --no-daemon start --no-crash-worker-on-failure'
 
 mtb_bust_cache_for_biz_user_worker:
@@ -894,9 +931,11 @@ update_ad_spend_worker:
     runbook: "https://confluence.yelpcorp.com/display/AB/Runbooks+-+UpdateAdSpendWorker"
     page: false
   extra_volumes:
-    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}   - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
 
-advertiser_integrity_check_worker: cpus: 1
+advertiser_integrity_check_worker:
+  cpus: 1
   instances: 1
   mem: 1000
   cmd: 'exec dumb-init python batch/kew_workers/advertiser_integrity_check_worker.py --no-daemon start'
@@ -907,11 +946,13 @@ advertiser_integrity_check_worker: cpus: 1
     runbook: "y/advertiser_integrity_check"
     page: false
   extra_volumes:
-    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}   - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
 
 # Spam Workers
 
-payload_kew_worker: &spam_kew_worker cpus: 0.1
+payload_kew_worker: &spam_kew_worker
+  cpus: 0.1
   mem: 1000
   monitoring:
     page: false
@@ -930,7 +971,7 @@ restore_quarantined_content_kew_worker:
 # https://confluence.yelpcorp.com/display/PSHIP/Data+Ingestion #
 ################################################################
 
-data_ingestion_worker: &di_worker_template
+data_ingestion_worker:  &di_worker_template
   cpus: 1
   mem: 900
   instances: 0
@@ -944,7 +985,8 @@ data_ingestion_worker: &di_worker_template
   extra_volumes:
     - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
 
-di_service_offering_worker: <<: *di_worker_template
+di_service_offering_worker:
+  <<: *di_worker_template
   cpus: 0.3
   instances: 1
   cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/service_offering_worker.py --no-daemon start'
@@ -1291,15 +1333,15 @@ di_payment_account_update_worker:
 
 # ---- Begin GROWTH services ----
 facebook_friend_sync_workers:
-  cpus: 0.2
-  mem: 1024
-  instances: 1
-  deploy_group: 'stageg'
-  monitoring:
-    team: nux
-    alert_after: 10m
-    runbook: "http://y/nux-runbook"
-  cmd: "exec dumb-init python batch/kew_workers/facebook_friend_sync_worker.py --no-daemon start"
+    cpus: .2
+    mem: 1024
+    instances: 1
+    deploy_group: 'stageg'
+    monitoring:
+        team: nux
+        alert_after: 10m
+        runbook: "http://y/nux-runbook"
+    cmd: "exec dumb-init python batch/kew_workers/facebook_friend_sync_worker.py --no-daemon start"
 
 batch_job_process:
   cpus: 0.5
@@ -1388,7 +1430,7 @@ kew_mass_email_master_low:
 
 # Mass email slaves
 kew_mass_email_slave_high:
-  cpus: 0.2
+  cpus: .2
   mem: 1024
   disk: 2048
   instances: 1
@@ -1471,7 +1513,8 @@ partner_business_claims_worker: &pbc_worker_template
   extra_volumes:
     - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
 
-biz_owner_bulk_claims_worker: <<: *pbc_worker_template
+biz_owner_bulk_claims_worker:
+  <<: *pbc_worker_template
   instances: 1
   cmd: 'exec dumb-init python batch/kew_workers/partner_biz_claims/biz_owner_bulk_claims_worker.py --no-daemon start'
 
@@ -1509,7 +1552,15 @@ elasticindexer_review_suggestion:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python batch/elasticindexer/parallel_datapipe_elastic_indexer.py --client-namespace=elasticindexer_review_suggestion_stageg --indexer-group=review_suggestions --position-key=elasticindexer_review_suggestion_stageg_position --checkpoints-log-name=elasticindexer_review_suggestion_stageg_timing_checkpoints --num-workers=2 --official-es-client --es-service-name=elasticsearch-review-suggestions --managed-queues --no-daemon start'
+  cmd: 'exec dumb-init python batch/elasticindexer/parallel_datapipe_elastic_indexer.py --client-namespace=elasticindexer_review_suggestion_stageg
+    --indexer-group=review_suggestions
+    --position-key=elasticindexer_review_suggestion_stageg_position
+    --checkpoints-log-name=elasticindexer_review_suggestion_stageg_timing_checkpoints
+    --num-workers=2
+    --official-es-client
+    --es-service-name=elasticsearch-review-suggestions
+    --managed-queues
+    --no-daemon start'
 
 log_based_indexer:
   cpus: 0.5
@@ -1519,7 +1570,8 @@ log_based_indexer:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python batch/elasticindexer/review_suggestion/log_based_indexer.py --cluster=uswest1-stageg --topics=biz_attribute,call,directions,map,message_the_business,ytp_order_event,url_visit --no-daemon start'
+  cmd: 'exec dumb-init python batch/elasticindexer/review_suggestion/log_based_indexer.py --cluster=uswest1-stageg
+    --topics=biz_attribute,call,directions,map,message_the_business,ytp_order_event,url_visit --no-daemon start'
 
 log_based_indexer_east:
   cpus: 0.5
@@ -1529,7 +1581,8 @@ log_based_indexer_east:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/elasticindexer/review_suggestion/log_based_indexer_worker.py --task-suffix=east --num-messages=1 --max-collect-time=120 --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/elasticindexer/review_suggestion/log_based_indexer_worker.py
+    --task-suffix=east --num-messages=1 --max-collect-time=120 --no-daemon start'
 
 log_based_indexer_pnw:
   cpus: 0.5
@@ -1539,7 +1592,8 @@ log_based_indexer_pnw:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/elasticindexer/review_suggestion/log_based_indexer_worker.py --task-suffix=pnw --num-messages=1 --max-collect-time=120 --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/elasticindexer/review_suggestion/log_based_indexer_worker.py
+    --task-suffix=pnw --num-messages=1 --max-collect-time=120 --no-daemon start'
 
 log_based_indexer_west:
   cpus: 0.5
@@ -1549,7 +1603,8 @@ log_based_indexer_west:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/elasticindexer/review_suggestion/log_based_indexer_worker.py --task-suffix=west --num-messages=1 --max-collect-time=120 --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/elasticindexer/review_suggestion/log_based_indexer_worker.py
+    --task-suffix=west --num-messages=1 --max-collect-time=120 --no-daemon start'
 
 ####################################
 #   START DW_ETL_TASK_WORKERS      #
@@ -1596,9 +1651,11 @@ advertiser_new_review_email_worker:
     page: false
     team: contributions
   extra_volumes:
-    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}   - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
 
-deactivate_quarantined_content_worker: cpus: 1
+deactivate_quarantined_content_worker:
+  cpus: 1
   mem: 5000
   instances: 1
   deploy_group: 'stageg'
@@ -1615,7 +1672,8 @@ populate_elite_city_kew_worker:
   monitoring:
     page: false
     team: contributions
-  cmd: 'exec dumb-init python -m batch.kew_workers.populate_elite_city_worker --max-task-time=36000 --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.populate_elite_city_worker
+    --max-task-time=36000 --no-daemon start'
 
 mobile_alerts_add_multiple_kew_worker:
   cpus: 1
@@ -1625,7 +1683,8 @@ mobile_alerts_add_multiple_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.mobile_alerts_add_multiple_worker --no-notification --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.mobile_alerts_add_multiple_worker
+    --no-notification --no-daemon start'
 
 mobile_alerts_remove_kew_worker:
   cpus: 1
@@ -1635,7 +1694,8 @@ mobile_alerts_remove_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.mobile_alerts_remove_worker --num-messages=10 --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.mobile_alerts_remove_worker
+    --num-messages=10 --no-daemon start'
 
 mobile_alerts_update_kew_worker:
   cpus: 1
@@ -1645,7 +1705,8 @@ mobile_alerts_update_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.mobile_alerts_update_worker --num-messages=10 --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.mobile_alerts_update_worker
+    --num-messages=10 --no-daemon start'
 
 mobile_alerts_viewed_kew_worker:
   cpus: 1
@@ -1655,7 +1716,8 @@ mobile_alerts_viewed_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.mobile_alerts_viewed_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.mobile_alerts_viewed_worker
+    --no-daemon start'
 
 quicktip_language_kew_worker:
   cpus: 1
@@ -1665,7 +1727,8 @@ quicktip_language_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.quicktip_language_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.quicktip_language_worker
+    --no-daemon start'
 
 quicktip_quality_score_kew_worker:
   cpus: 1
@@ -1675,7 +1738,8 @@ quicktip_quality_score_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.quicktip_quality_score_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.quicktip_quality_score_worker
+    --no-daemon start'
 
 api_user_location_kew_worker:
   cpus: 1
@@ -1685,7 +1749,8 @@ api_user_location_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.api_user_location_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.api_user_location_worker
+    --no-daemon start'
 
 check_in_healer_kew_worker:
   cpus: 1
@@ -1695,7 +1760,8 @@ check_in_healer_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.check_in_healer --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.check_in_healer
+    --no-daemon start'
 
 potd_kew_worker:
   cpus: 1
@@ -1705,7 +1771,8 @@ potd_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.potd_worker --max-task-time=36000 --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.potd_worker --max-task-time=36000
+    --no-daemon start'
 
 elites_csv_kew_worker:
   cpus: 1
@@ -1715,7 +1782,8 @@ elites_csv_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.elites_csv_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.elites_csv_worker
+    --no-daemon start'
 
 clear_pending_elite_invites_kew_worker:
   cpus: 1
@@ -1725,7 +1793,8 @@ clear_pending_elite_invites_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.clear_pending_elite_invites_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.clear_pending_elite_invites_worker
+    --no-daemon start'
 
 cm_user_queue_kew_worker:
   cpus: 1
@@ -1735,7 +1804,8 @@ cm_user_queue_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.cm_user_queue_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.cm_user_queue_worker
+    --no-daemon start'
 
 init_user_weekly_subscriptions_kew_worker:
   cpus: 1
@@ -1745,7 +1815,8 @@ init_user_weekly_subscriptions_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.init_user_weekly_subscriptions_worker --max-task-time=36000 --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.init_user_weekly_subscriptions_worker
+    --max-task-time=36000 --no-daemon start'
 
 platform_order_recruit_ghost_user_merge_worker:
   cpus: 1
@@ -1755,7 +1826,8 @@ platform_order_recruit_ghost_user_merge_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.platform_order_recruit_ghost_user_merge_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.platform_order_recruit_ghost_user_merge_worker
+    --no-daemon start'
 
 conversation_count_kew_worker:
   cpus: 1
@@ -1765,7 +1837,8 @@ conversation_count_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.conversation_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.conversation_worker
+    --no-daemon start'
 
 facebook_exchange_access_token_kew_worker:
   cpus: 1
@@ -1775,7 +1848,8 @@ facebook_exchange_access_token_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.facebook_exchange_access_token_worker --num-messages=10 --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.facebook_exchange_access_token_worker
+    --num-messages=10 --no-daemon start'
 
 facebook_async_share_review_kew_worker:
   cpus: 1
@@ -1785,7 +1859,8 @@ facebook_async_share_review_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.share_review_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.share_review_worker
+    --no-daemon start'
 
 share_photo_facebook_kew_worker:
   cpus: 1
@@ -1795,7 +1870,8 @@ share_photo_facebook_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.share_photo_facebook_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.share_photo_facebook_worker
+    --no-daemon start'
 
 review_count_kew_worker:
   cpus: 1
@@ -1805,7 +1881,8 @@ review_count_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.review_count_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.review_count_worker
+    --no-daemon start'
 
 associate_biz_photo_kew_worker:
   cpus: 1
@@ -1815,7 +1892,8 @@ associate_biz_photo_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.associate_biz_photo_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.associate_biz_photo_worker
+    --no-daemon start'
 
 review_language_kew_worker:
   cpus: 0.2
@@ -1839,7 +1917,7 @@ review_language_kew_worker:
 
 biz_geocode_update_sweep:
   instances: 0
-  cpus: 0.3
+  cpus: .3
   mem: 1024
   deploy_group: 'stageg'
   bounce_method: 'downthenup'
@@ -1856,7 +1934,7 @@ biz_geocode_update_sweep:
 
 # ---- Begin Ad-Creative kew workers ---
 update_ad_creative_worker_kew:
-  cpus: 0.5
+  cpus: .5
   mem: 2000
   monitoring:
     page: false
@@ -1880,7 +1958,8 @@ update_ad_store_worker_kew:
   deploy_group: 'stageg'
   min_instances: 2
   max_instances: 10
-  cmd: 'exec dumb-init python -m batch.kew_workers.ads.update_ad_store_worker --max-collect-time=10 --num-messages=100 --no-crash-worker-on-failure --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.ads.update_ad_store_worker --max-collect-time=10
+    --num-messages=100 --no-crash-worker-on-failure --no-daemon start'
 
 remove_from_ad_store_worker_kew:
   cpus: 0.1
@@ -1891,7 +1970,8 @@ remove_from_ad_store_worker_kew:
     team: ad_delivery
   deploy_group: 'stageg'
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.ads.remove_from_ad_store_worker --max-collect-time=5 --num-messages=1 --no-crash-worker-on-failure --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.ads.remove_from_ad_store_worker
+    --max-collect-time=5 --num-messages=1 --no-crash-worker-on-failure --no-daemon start'
 
 # ---- End Ad Delivery kew workers ----
 
@@ -1910,9 +1990,11 @@ ooyala_video_processing_kew_worker:
     page: false
     ticket: true
   extra_volumes:
-    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}   - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
 
-cohort_business_worker: cpus: 1
+cohort_business_worker:
+  cpus: 1
   mem: 1000
   monitoring:
     team: biz_money
@@ -1975,7 +2057,8 @@ biz_user_data_export_kew_worker:
 
 # This is a dummy test job for a parallel datapipe simple indexer
 # Refer to http://y/ei-paasta for more documentation on this.
-elasticindexer_test_parallel_uswest1_stageg: &parallel_datapipe_elastic_indexer cpus: 3 # Roughly equivalent to the number of workers for parallel ones
+elasticindexer_test_parallel_uswest1_stageg: &parallel_datapipe_elastic_indexer
+  cpus: 3 # Roughly equivalent to the number of workers for parallel ones
   mem: 3072 # Roughly 3GB of memory
   instances: 0
   deploy_group: 'stageg'
@@ -2014,9 +2097,9 @@ elasticindexer_test_parallel_uswest1_stageg: &parallel_datapipe_elastic_indexer 
 
 # This is a dummy test job for a parallel template datapipe indexer
 # NOTE :- The REQUIRED variables from elasticindexer_test_parallel_uswest1_stageg still needs to be overridden.
-elasticindexer_test_parallel_template_uswest1_stageg:
+elasticindexer_test_parallel_template_uswest1_stageg: &parallel_template_datapipe_elastic_indexer
   <<: *parallel_datapipe_elastic_indexer
-  env:
+  env: &default_ei_template_env
     <<: *default_ei_env
     NUM_EXECUTORS: '3'
     NUM_LINKERS: '1'
@@ -2065,14 +2148,19 @@ yelp_main_application_specific_transformers_template: &ym_ast_template
     alert_after: 10m
     runbook: http://y/ast-runbook
   extra_volumes:
-    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}   - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
+    - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
+    - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
 
-yelp_main_2_stage_asts_spolt: <<: *ym_ast_template
+yelp_main_2_stage_asts_spolt:
+  <<: *ym_ast_template
   mem: 3000
   env:
     SERVICE_ENV_CONFIG_PATH: /nail/srv/configs/paastorm_asts.yaml
     SERVICE_CONFIG_PATH: /nail/srv/configs/paastorm_asts.yaml
-  cmd: 'exec dumb-init ./batch/datapipeline/run_2_stage_paastorm_asts.sh --fixed-namespaces="stageg.refresh_primary.yelp" --out-namespace="stageg.refresh_primary.yelp.yelp_main_transformed" --notify-email="data-pipeline-team+batch@yelp.com" --no-daemon start'
+  cmd: 'exec dumb-init ./batch/datapipeline/run_2_stage_paastorm_asts.sh
+      --fixed-namespaces="stageg.refresh_primary.yelp"
+      --out-namespace="stageg.refresh_primary.yelp.yelp_main_transformed"
+      --notify-email="data-pipeline-team+batch@yelp.com" --no-daemon start'
   instances: 2
 
 yelp_main_application_specific_transformers:
@@ -2120,7 +2208,8 @@ primary_photo_update_kew_worker:
 
 # ---- Begin Biz Growth kew workers ----
 
-biz_user_quick_links_kew_worker: cpus: 0.1
+biz_user_quick_links_kew_worker:
+  cpus: 0.1
   mem: 5000
   monitoring:
     page: false
@@ -2138,7 +2227,8 @@ biz_user_quick_links_kew_worker: cpus: 0.1
 #   START USER DATA EXPORT BATCHES    #
 #######################################
 
-user_data_export_bookmarks_worker: &user_data_export_worker_template
+user_data_export_bookmarks_worker:
+  &user_data_export_worker_template
   cpus: 0.05
   deploy_group: 'stageg'
   instances: 1
@@ -2208,7 +2298,7 @@ check_in_photo_worker:
 #######################################
 
 consumer_biz_user_data_sync_worker:
-  cpus: 0.1
+  cpus: .1
   mem: 1024
   deploy_group: 'stageg'
   monitoring:
