@@ -1,7 +1,7 @@
 main_uswest1: &main_template
-  cpus: 8
+  cpus: 2
   env:
-    APACHE_WORKERS: '8'
+    APACHE_WORKERS: '11'
     LISTENADDRESS: '0.0.0.0'
     UWSGI_ADDR: '127.0.0.1'
   min_instances: 2
@@ -15,7 +15,7 @@ main_uswest1: &main_template
     good_enough_window: [0.45, 0.55]
   registrations: ["yelp-main.main_ro", "yelp-main.main", "yelp-main.canary"]
   bounce_margin_factor: 0.33 # Help the bounce go faster by allowing under-replication during bounces.
-  mem: 8500
+  mem: 13501
   disk: 2048
   extra_volumes:
     - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
@@ -661,7 +661,7 @@ aggregate_payment_account_review_worker:
 # ---- Begin data quality batch workers ----
 
 business_merge_kew_worker: &data_quality_worker
-  cpus: 0.3
+  cpus: .3
   mem: 2000
   deploy_group: 'stageg'
   monitoring:
@@ -697,7 +697,7 @@ web_alerts_viewed_worker:
     team: readerx
 
 rematch_content_for_menu_kew_worker:
-  cpus: 0.50
+  cpus: .50
   mem: 1024
   disk: 2048
   min_instances: 10
@@ -971,7 +971,7 @@ restore_quarantined_content_kew_worker:
 # https://confluence.yelpcorp.com/display/PSHIP/Data+Ingestion #
 ################################################################
 
-data_ingestion_worker: &di_worker_template
+data_ingestion_worker:  &di_worker_template
   cpus: 1
   mem: 900
   instances: 0
@@ -1333,15 +1333,15 @@ di_payment_account_update_worker:
 
 # ---- Begin GROWTH services ----
 facebook_friend_sync_workers:
-  cpus: 0.2
-  mem: 1024
-  instances: 1
-  deploy_group: 'stageg'
-  monitoring:
-    team: nux
-    alert_after: 10m
-    runbook: "http://y/nux-runbook"
-  cmd: "exec dumb-init python batch/kew_workers/facebook_friend_sync_worker.py --no-daemon start"
+    cpus: .2
+    mem: 1024
+    instances: 1
+    deploy_group: 'stageg'
+    monitoring:
+        team: nux
+        alert_after: 10m
+        runbook: "http://y/nux-runbook"
+    cmd: "exec dumb-init python batch/kew_workers/facebook_friend_sync_worker.py --no-daemon start"
 
 batch_job_process:
   cpus: 0.5
@@ -1430,7 +1430,7 @@ kew_mass_email_master_low:
 
 # Mass email slaves
 kew_mass_email_slave_high:
-  cpus: 0.2
+  cpus: .2
   mem: 1024
   disk: 2048
   instances: 1
@@ -1552,7 +1552,15 @@ elasticindexer_review_suggestion:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python batch/elasticindexer/parallel_datapipe_elastic_indexer.py --client-namespace=elasticindexer_review_suggestion_stageg --indexer-group=review_suggestions --position-key=elasticindexer_review_suggestion_stageg_position --checkpoints-log-name=elasticindexer_review_suggestion_stageg_timing_checkpoints --num-workers=2 --official-es-client --es-service-name=elasticsearch-review-suggestions --managed-queues --no-daemon start'
+  cmd: 'exec dumb-init python batch/elasticindexer/parallel_datapipe_elastic_indexer.py --client-namespace=elasticindexer_review_suggestion_stageg
+    --indexer-group=review_suggestions
+    --position-key=elasticindexer_review_suggestion_stageg_position
+    --checkpoints-log-name=elasticindexer_review_suggestion_stageg_timing_checkpoints
+    --num-workers=2
+    --official-es-client
+    --es-service-name=elasticsearch-review-suggestions
+    --managed-queues
+    --no-daemon start'
 
 log_based_indexer:
   cpus: 0.5
@@ -1562,7 +1570,8 @@ log_based_indexer:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python batch/elasticindexer/review_suggestion/log_based_indexer.py --cluster=uswest1-stageg --topics=biz_attribute,call,directions,map,message_the_business,ytp_order_event,url_visit --no-daemon start'
+  cmd: 'exec dumb-init python batch/elasticindexer/review_suggestion/log_based_indexer.py --cluster=uswest1-stageg
+    --topics=biz_attribute,call,directions,map,message_the_business,ytp_order_event,url_visit --no-daemon start'
 
 log_based_indexer_east:
   cpus: 0.5
@@ -1572,7 +1581,8 @@ log_based_indexer_east:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/elasticindexer/review_suggestion/log_based_indexer_worker.py --task-suffix=east --num-messages=1 --max-collect-time=120 --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/elasticindexer/review_suggestion/log_based_indexer_worker.py
+    --task-suffix=east --num-messages=1 --max-collect-time=120 --no-daemon start'
 
 log_based_indexer_pnw:
   cpus: 0.5
@@ -1582,7 +1592,8 @@ log_based_indexer_pnw:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/elasticindexer/review_suggestion/log_based_indexer_worker.py --task-suffix=pnw --num-messages=1 --max-collect-time=120 --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/elasticindexer/review_suggestion/log_based_indexer_worker.py
+    --task-suffix=pnw --num-messages=1 --max-collect-time=120 --no-daemon start'
 
 log_based_indexer_west:
   cpus: 0.5
@@ -1592,7 +1603,8 @@ log_based_indexer_west:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/elasticindexer/review_suggestion/log_based_indexer_worker.py --task-suffix=west --num-messages=1 --max-collect-time=120 --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/elasticindexer/review_suggestion/log_based_indexer_worker.py
+    --task-suffix=west --num-messages=1 --max-collect-time=120 --no-daemon start'
 
 ####################################
 #   START DW_ETL_TASK_WORKERS      #
@@ -1660,7 +1672,8 @@ populate_elite_city_kew_worker:
   monitoring:
     page: false
     team: contributions
-  cmd: 'exec dumb-init python -m batch.kew_workers.populate_elite_city_worker --max-task-time=36000 --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.populate_elite_city_worker
+    --max-task-time=36000 --no-daemon start'
 
 mobile_alerts_add_multiple_kew_worker:
   cpus: 1
@@ -1670,7 +1683,8 @@ mobile_alerts_add_multiple_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.mobile_alerts_add_multiple_worker --no-notification --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.mobile_alerts_add_multiple_worker
+    --no-notification --no-daemon start'
 
 mobile_alerts_remove_kew_worker:
   cpus: 1
@@ -1680,7 +1694,8 @@ mobile_alerts_remove_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.mobile_alerts_remove_worker --num-messages=10 --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.mobile_alerts_remove_worker
+    --num-messages=10 --no-daemon start'
 
 mobile_alerts_update_kew_worker:
   cpus: 1
@@ -1690,7 +1705,8 @@ mobile_alerts_update_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.mobile_alerts_update_worker --num-messages=10 --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.mobile_alerts_update_worker
+    --num-messages=10 --no-daemon start'
 
 mobile_alerts_viewed_kew_worker:
   cpus: 1
@@ -1700,7 +1716,8 @@ mobile_alerts_viewed_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.mobile_alerts_viewed_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.mobile_alerts_viewed_worker
+    --no-daemon start'
 
 quicktip_language_kew_worker:
   cpus: 1
@@ -1710,7 +1727,8 @@ quicktip_language_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.quicktip_language_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.quicktip_language_worker
+    --no-daemon start'
 
 quicktip_quality_score_kew_worker:
   cpus: 1
@@ -1720,7 +1738,8 @@ quicktip_quality_score_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.quicktip_quality_score_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.quicktip_quality_score_worker
+    --no-daemon start'
 
 api_user_location_kew_worker:
   cpus: 1
@@ -1730,7 +1749,8 @@ api_user_location_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.api_user_location_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.api_user_location_worker
+    --no-daemon start'
 
 check_in_healer_kew_worker:
   cpus: 1
@@ -1740,7 +1760,8 @@ check_in_healer_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.check_in_healer --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.check_in_healer
+    --no-daemon start'
 
 potd_kew_worker:
   cpus: 1
@@ -1750,7 +1771,8 @@ potd_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.potd_worker --max-task-time=36000 --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.potd_worker --max-task-time=36000
+    --no-daemon start'
 
 elites_csv_kew_worker:
   cpus: 1
@@ -1760,7 +1782,8 @@ elites_csv_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.elites_csv_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.elites_csv_worker
+    --no-daemon start'
 
 clear_pending_elite_invites_kew_worker:
   cpus: 1
@@ -1770,7 +1793,8 @@ clear_pending_elite_invites_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.clear_pending_elite_invites_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.clear_pending_elite_invites_worker
+    --no-daemon start'
 
 cm_user_queue_kew_worker:
   cpus: 1
@@ -1780,7 +1804,8 @@ cm_user_queue_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.cm_user_queue_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.cm_user_queue_worker
+    --no-daemon start'
 
 init_user_weekly_subscriptions_kew_worker:
   cpus: 1
@@ -1790,7 +1815,8 @@ init_user_weekly_subscriptions_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.init_user_weekly_subscriptions_worker --max-task-time=36000 --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.init_user_weekly_subscriptions_worker
+    --max-task-time=36000 --no-daemon start'
 
 platform_order_recruit_ghost_user_merge_worker:
   cpus: 1
@@ -1800,7 +1826,8 @@ platform_order_recruit_ghost_user_merge_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.platform_order_recruit_ghost_user_merge_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.platform_order_recruit_ghost_user_merge_worker
+    --no-daemon start'
 
 conversation_count_kew_worker:
   cpus: 1
@@ -1810,7 +1837,8 @@ conversation_count_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.conversation_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.conversation_worker
+    --no-daemon start'
 
 facebook_exchange_access_token_kew_worker:
   cpus: 1
@@ -1820,7 +1848,8 @@ facebook_exchange_access_token_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.facebook_exchange_access_token_worker --num-messages=10 --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.facebook_exchange_access_token_worker
+    --num-messages=10 --no-daemon start'
 
 facebook_async_share_review_kew_worker:
   cpus: 1
@@ -1830,7 +1859,8 @@ facebook_async_share_review_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.share_review_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.share_review_worker
+    --no-daemon start'
 
 share_photo_facebook_kew_worker:
   cpus: 1
@@ -1840,7 +1870,8 @@ share_photo_facebook_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.share_photo_facebook_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.share_photo_facebook_worker
+    --no-daemon start'
 
 review_count_kew_worker:
   cpus: 1
@@ -1850,7 +1881,8 @@ review_count_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.review_count_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.review_count_worker
+    --no-daemon start'
 
 associate_biz_photo_kew_worker:
   cpus: 1
@@ -1860,7 +1892,8 @@ associate_biz_photo_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.associate_biz_photo_worker --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.associate_biz_photo_worker
+    --no-daemon start'
 
 review_language_kew_worker:
   cpus: 0.2
@@ -1884,7 +1917,7 @@ review_language_kew_worker:
 
 biz_geocode_update_sweep:
   instances: 0
-  cpus: 0.3
+  cpus: .3
   mem: 1024
   deploy_group: 'stageg'
   bounce_method: 'downthenup'
@@ -1901,7 +1934,7 @@ biz_geocode_update_sweep:
 
 # ---- Begin Ad-Creative kew workers ---
 update_ad_creative_worker_kew:
-  cpus: 0.5
+  cpus: .5
   mem: 2000
   monitoring:
     page: false
@@ -1925,7 +1958,8 @@ update_ad_store_worker_kew:
   deploy_group: 'stageg'
   min_instances: 2
   max_instances: 10
-  cmd: 'exec dumb-init python -m batch.kew_workers.ads.update_ad_store_worker --max-collect-time=10 --num-messages=100 --no-crash-worker-on-failure --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.ads.update_ad_store_worker --max-collect-time=10
+    --num-messages=100 --no-crash-worker-on-failure --no-daemon start'
 
 remove_from_ad_store_worker_kew:
   cpus: 0.1
@@ -1936,7 +1970,8 @@ remove_from_ad_store_worker_kew:
     team: ad_delivery
   deploy_group: 'stageg'
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.ads.remove_from_ad_store_worker --max-collect-time=5 --num-messages=1 --no-crash-worker-on-failure --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.ads.remove_from_ad_store_worker
+    --max-collect-time=5 --num-messages=1 --no-crash-worker-on-failure --no-daemon start'
 
 # ---- End Ad Delivery kew workers ----
 
@@ -2062,9 +2097,9 @@ elasticindexer_test_parallel_uswest1_stageg: &parallel_datapipe_elastic_indexer
 
 # This is a dummy test job for a parallel template datapipe indexer
 # NOTE :- The REQUIRED variables from elasticindexer_test_parallel_uswest1_stageg still needs to be overridden.
-elasticindexer_test_parallel_template_uswest1_stageg:
+elasticindexer_test_parallel_template_uswest1_stageg: &parallel_template_datapipe_elastic_indexer
   <<: *parallel_datapipe_elastic_indexer
-  env:
+  env: &default_ei_template_env
     <<: *default_ei_env
     NUM_EXECUTORS: '3'
     NUM_LINKERS: '1'
@@ -2122,7 +2157,10 @@ yelp_main_2_stage_asts_spolt:
   env:
     SERVICE_ENV_CONFIG_PATH: /nail/srv/configs/paastorm_asts.yaml
     SERVICE_CONFIG_PATH: /nail/srv/configs/paastorm_asts.yaml
-  cmd: 'exec dumb-init ./batch/datapipeline/run_2_stage_paastorm_asts.sh --fixed-namespaces="stageg.refresh_primary.yelp" --out-namespace="stageg.refresh_primary.yelp.yelp_main_transformed" --notify-email="data-pipeline-team+batch@yelp.com" --no-daemon start'
+  cmd: 'exec dumb-init ./batch/datapipeline/run_2_stage_paastorm_asts.sh
+      --fixed-namespaces="stageg.refresh_primary.yelp"
+      --out-namespace="stageg.refresh_primary.yelp.yelp_main_transformed"
+      --notify-email="data-pipeline-team+batch@yelp.com" --no-daemon start'
   instances: 2
 
 yelp_main_application_specific_transformers:
@@ -2189,7 +2227,8 @@ biz_user_quick_links_kew_worker:
 #   START USER DATA EXPORT BATCHES    #
 #######################################
 
-user_data_export_bookmarks_worker: &user_data_export_worker_template
+user_data_export_bookmarks_worker:
+  &user_data_export_worker_template
   cpus: 0.05
   deploy_group: 'stageg'
   instances: 1
@@ -2259,7 +2298,7 @@ check_in_photo_worker:
 #######################################
 
 consumer_biz_user_data_sync_worker:
-  cpus: 0.1
+  cpus: .1
   mem: 1024
   deploy_group: 'stageg'
   monitoring:
