@@ -1,5 +1,5 @@
 main_uswest1: &main_template
-  cpus: 2
+  cpus: 4
   env:
     APACHE_WORKERS: '11'
     LISTENADDRESS: '0.0.0.0'
