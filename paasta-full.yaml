@@ -1,7 +1,7 @@
 main_uswest1: &main_template
   cpus: 2
   env:
-    APACHE_WORKERS: '10'
+    APACHE_WORKERS: '11'
     LISTENADDRESS: '0.0.0.0'
     UWSGI_ADDR: '127.0.0.1'
   min_instances: 2
@@ -15,7 +15,7 @@ main_uswest1: &main_template
     good_enough_window: [0.45, 0.55]
   registrations: ["yelp-main.main_ro", "yelp-main.main", "yelp-main.canary"]
   bounce_margin_factor: 0.33 # Help the bounce go faster by allowing under-replication during bounces.
-  mem: 10500
+  mem: 11500
   disk: 2048
   extra_volumes:
   - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
