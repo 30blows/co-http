@@ -19,14 +19,14 @@ spec:
         comp: c4
     spec:
       containers:
-        - name: main
-          image: opsani/co-http:latest
-          args: [busy=0&call=c3]     # 1
-          resources:
-            limits:
-              cpu: 2.0
-              memory: 620.0Mi
-          ports:
-            - containerPort: 8080
+      - name: main
+        image: opsani/co-http:latest
+        args: [busy=0&call=c3]       # 1
+        resources:
+          limits:
+            cpu: 0.6
+            memory: 606.0Mi
+        ports:
+        - containerPort: 8080
       nodeSelector:
         oco: '4'
