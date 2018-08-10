@@ -19,15 +19,15 @@ spec:
         comp: c1
     spec:
       containers:
-        - name: main
-          image: opsani/co-http:latest
-          args: [busy=1300]    # 1050
-          resources:
-            limits: # testA
+      - name: main
+        image: opsani/co-http:latest
+        args: [busy=1300]      # 1050
+        resources:
+          limits:   # testA
             # testB
-              cpu: '0.6'  # testC
-              memory: 306.0Mi # testD
-          ports: # testE
-            - containerPort: 8080
+            cpu: '1.3'    # testC
+            memory: 313.0Mi   # testD
+        ports:   # testE
+          - containerPort: 8080
       nodeSelector:
         oco: '1'
