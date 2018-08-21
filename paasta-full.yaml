@@ -1,7 +1,7 @@
 main_uswest1: &main_template
-  cpus: 2
+  cpus: 7
   env:
-    APACHE_WORKERS: '14'
+    APACHE_WORKERS: '7'
     LISTENADDRESS: '0.0.0.0'
     UWSGI_ADDR: '127.0.0.1'
   min_instances: 2
@@ -15,7 +15,7 @@ main_uswest1: &main_template
     good_enough_window: [0.45, 0.55]
   registrations: ["yelp-main.main_ro", "yelp-main.main", "yelp-main.canary"]
   bounce_margin_factor: 0.33 # Help the bounce go faster by allowing under-replication during bounces.
-  mem: 14500
+  mem: 7500
   disk: 2048
   extra_volumes:
   - {containerPath: /nail/etc/mrjob, hostPath: /nail/etc/mrjob, mode: RO}
@@ -65,7 +65,8 @@ update_trust_label_historical_excellence_worker_kew_worker:
   mem: 1024
   deploy_group: stageg
   bounce_priority: -10
-  cmd: 'exec dumb-init python /nail/live/yelp/batch/kew_workers/update_trust_label_historical_excellence_worker.py --no-daemon start'
+  cmd: 'exec dumb-init python /nail/live/yelp/batch/kew_workers/update_trust_label_historical_excellence_worker.py --no-daemon
+    start'
   min_instances: 2
   max_instances: 10
   autoscaling:
@@ -138,25 +139,30 @@ revenue_program_order_receipt_kafka_consumer: &revenue_worker
   instances: 1
   extra_volumes:
   - {containerPath: /etc/yelp_clog.json, hostPath: /etc/yelp_clog.json, mode: RO}
-  cmd: exec dumb-init python -m batch.billing.ordering_kafka_consumers.program_order_receipt_kafka_consumer --rolling-restart-wait-time 120 --no-daemon start
+  cmd: exec dumb-init python -m batch.billing.ordering_kafka_consumers.program_order_receipt_kafka_consumer --rolling-restart-wait-time
+    120 --no-daemon start
 
 revenue_program_order_receipt_fallback_consumer:
   <<: *revenue_worker
-  cmd: exec dumb-init python -m batch.billing.ordering_kafka_consumers.program_order_receipt_kafka_scribe_cluster_consumer --no-daemon start
+  cmd: exec dumb-init python -m batch.billing.ordering_kafka_consumers.program_order_receipt_kafka_scribe_cluster_consumer
+    --no-daemon start
 
 retry_revenue_program_order_receipt_scribe_consumer:
   <<: *revenue_worker
-  cmd: exec dumb-init python -m batch.billing.ordering_kafka_consumers.retry_log_program_order_receipt_kafka_scribe_cluster_consumer --no-daemon start
+  cmd: exec dumb-init python -m batch.billing.ordering_kafka_consumers.retry_log_program_order_receipt_kafka_scribe_cluster_consumer
+    --no-daemon start
 
 revenue_order_client_request_kafka_consumer:
   <<: *revenue_worker
   instances: 2
-  cmd: exec dumb-init python -m batch.billing.ordering_kafka_consumers.order_client_request_kafka_consumer --rolling-restart-wait-time 120 --no-daemon start
+  cmd: exec dumb-init python -m batch.billing.ordering_kafka_consumers.order_client_request_kafka_consumer --rolling-restart-wait-time
+    120 --no-daemon start
 
 revenue_order_client_request_fallback_consumer:
   <<: *revenue_worker
   instances: 1
-  cmd: exec dumb-init python -m batch.billing.ordering_kafka_consumers.order_client_request_kafka_scribe_cluster_consumer --no-daemon start
+  cmd: exec dumb-init python -m batch.billing.ordering_kafka_consumers.order_client_request_kafka_scribe_cluster_consumer
+    --no-daemon start
 
 # ---- Begin revenue bulk workers ----
 bulk_update_kew_worker: &bulk_update_kew_worker
@@ -217,22 +223,26 @@ bulk_move_biz_photos_kew_worker:
 bulk_update_check_in_offers_kew_worker:
   <<: *bulk_update_kew_worker
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/bulk_update_worker.py --function-name=bulk_update_check_in_offers --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/bulk_update_worker.py --function-name=bulk_update_check_in_offers --no-daemon
+    start'
 
 bulk_update_biz_user_access_kew_worker:
   <<: *bulk_update_kew_worker
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/bulk_update_worker.py --function-name=bulk_update_biz_user_access --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/bulk_update_worker.py --function-name=bulk_update_biz_user_access --no-daemon
+    start'
 
 bulk_update_message_the_business_kew_worker:
   <<: *bulk_update_kew_worker
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/bulk_update_worker.py --function-name=bulk_update_message_the_business --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/bulk_update_worker.py --function-name=bulk_update_message_the_business --no-daemon
+    start'
 
 bulk_update_cta_desktop_kew_worker:
   <<: *bulk_update_kew_worker
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/bulk_update_worker.py --function-name=bulk_update_cta_desktop --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/bulk_update_worker.py --function-name=bulk_update_cta_desktop --no-daemon
+    start'
 
 bulk_update_cta_mobile_kew_worker:
   <<: *bulk_update_kew_worker
@@ -320,31 +330,38 @@ sfn_business_ad_bookkeeping_worker:
 
 sfn_business_page_bookkeeping_worker:
   <<: *sfn_subscription_billing_worker
-  cmd: 'exec dumb-init python yelp/component/billing/step_functions/activities/business_page_enhancement_bookkeeping.py --no-daemon start'
+  cmd: 'exec dumb-init python yelp/component/billing/step_functions/activities/business_page_enhancement_bookkeeping.py --no-daemon
+    start'
 
 sfn_ad_campaign_bookkeeping_isolated_account_worker:
   <<: *sfn_subscription_billing_worker
-  cmd: 'exec dumb-init python yelp/component/billing/step_functions/activities/ad_campaign_bookkeeping_isolated_account.py --no-daemon start'
+  cmd: 'exec dumb-init python yelp/component/billing/step_functions/activities/ad_campaign_bookkeeping_isolated_account.py
+    --no-daemon start'
 
 sfn_business_ad_bookkeeping_isolated_account_worker:
   <<: *sfn_subscription_billing_worker
-  cmd: 'exec dumb-init python yelp/component/billing/step_functions/activities/business_ad_bookkeeping_isolated_account.py --no-daemon start'
+  cmd: 'exec dumb-init python yelp/component/billing/step_functions/activities/business_ad_bookkeeping_isolated_account.py
+    --no-daemon start'
 
 sfn_business_page_bookkeeping_isolated_account_worker:
   <<: *sfn_subscription_billing_worker
-  cmd: 'exec dumb-init python yelp/component/billing/step_functions/activities/business_page_enhancement_bookkeeping_isolated_account.py --no-daemon start'
+  cmd: 'exec dumb-init python yelp/component/billing/step_functions/activities/business_page_enhancement_bookkeeping_isolated_account.py
+    --no-daemon start'
 
 sfn_ad_campaign_bookkeeping_large_account_worker:
   <<: *sfn_subscription_billing_worker
-  cmd: 'exec dumb-init python yelp/component/billing/step_functions/activities/ad_campaign_bookkeeping_large_account.py --no-daemon start'
+  cmd: 'exec dumb-init python yelp/component/billing/step_functions/activities/ad_campaign_bookkeeping_large_account.py --no-daemon
+    start'
 
 sfn_business_ad_bookkeeping_large_account_worker:
   <<: *sfn_subscription_billing_worker
-  cmd: 'exec dumb-init python yelp/component/billing/step_functions/activities/business_ad_bookkeeping_large_account.py --no-daemon start'
+  cmd: 'exec dumb-init python yelp/component/billing/step_functions/activities/business_ad_bookkeeping_large_account.py --no-daemon
+    start'
 
 sfn_business_page_bookkeeping_large_account_worker:
   <<: *sfn_subscription_billing_worker
-  cmd: 'exec dumb-init python yelp/component/billing/step_functions/activities/business_page_enhancement_bookkeeping_large_account.py --no-daemon start'
+  cmd: 'exec dumb-init python yelp/component/billing/step_functions/activities/business_page_enhancement_bookkeeping_large_account.py
+    --no-daemon start'
 
 # Subscription workers
 sfn_subs_lock_payment_account:
@@ -365,11 +382,13 @@ sfn_subs_purchase_finalize_purchase_v2:
 
 sfn_subs_purchase_handle_critical_error_v2:
   <<: *sfn_subscription_billing_worker
-  cmd: 'exec dumb-init python yelp/ordering/subscriptions/sfn_activities/purchase/handle_critical_error_v2.py --no-daemon start'
+  cmd: 'exec dumb-init python yelp/ordering/subscriptions/sfn_activities/purchase/handle_critical_error_v2.py --no-daemon
+    start'
 
 sfn_subs_purchase_handle_validation_error_v2:
   <<: *sfn_subscription_billing_worker
-  cmd: 'exec dumb-init python yelp/ordering/subscriptions/sfn_activities/purchase/handle_validation_error_v2.py --no-daemon start'
+  cmd: 'exec dumb-init python yelp/ordering/subscriptions/sfn_activities/purchase/handle_validation_error_v2.py --no-daemon
+    start'
 
 sfn_subs_purchase_place_orders:
   <<: *sfn_subscription_billing_worker
@@ -385,7 +404,8 @@ sfn_subs_purchase_prepare_purchase_v2:
 
 sfn_subs_purchase_update_collection_settings:
   <<: *sfn_subscription_billing_worker
-  cmd: 'exec dumb-init python yelp/ordering/subscriptions/sfn_activities/purchase/update_collection_settings.py --no-daemon start'
+  cmd: 'exec dumb-init python yelp/ordering/subscriptions/sfn_activities/purchase/update_collection_settings.py --no-daemon
+    start'
 
 sfn_subs_purchase_redeem_promotion:
   <<: *sfn_subscription_billing_worker
@@ -402,15 +422,18 @@ sfn_subs_purchase_v2_finalize_purchase:
 
 sfn_subs_purchase_v2_handle_critical_error:
   <<: *sfn_subscription_billing_worker
-  cmd: 'exec dumb-init python yelp/ordering/subscriptions/sfn_activities/purchase_v2/handle_critical_error.py --no-daemon start'
+  cmd: 'exec dumb-init python yelp/ordering/subscriptions/sfn_activities/purchase_v2/handle_critical_error.py --no-daemon
+    start'
 
 sfn_subs_purchase_v2_handle_validation_error:
   <<: *sfn_subscription_billing_worker
-  cmd: 'exec dumb-init python yelp/ordering/subscriptions/sfn_activities/purchase_v2/handle_validation_error.py --no-daemon start'
+  cmd: 'exec dumb-init python yelp/ordering/subscriptions/sfn_activities/purchase_v2/handle_validation_error.py --no-daemon
+    start'
 
 sfn_subs_purchase_v2_create_programs_and_features:
   <<: *sfn_subscription_billing_worker
-  cmd: 'exec dumb-init python yelp/ordering/subscriptions/sfn_activities/purchase_v2/create_programs_and_features.py --no-daemon start'
+  cmd: 'exec dumb-init python yelp/ordering/subscriptions/sfn_activities/purchase_v2/create_programs_and_features.py --no-daemon
+    start'
 
 sfn_subs_purchase_v2_redeem_promotion:
   <<: *sfn_subscription_billing_worker
@@ -439,11 +462,13 @@ sfn_subs_cancel_finalize_cancel:
 
 sfn_subs_cancel_handle_critical_error:
   <<: *sfn_subscription_billing_worker
-  cmd: 'exec dumb-init python yelp/ordering/subscriptions/sfn_activities/cancel/handle_cancel_critical_error.py --no-daemon start'
+  cmd: 'exec dumb-init python yelp/ordering/subscriptions/sfn_activities/cancel/handle_cancel_critical_error.py --no-daemon
+    start'
 
 sfn_subs_cancel_handle_validation_error:
   <<: *sfn_subscription_billing_worker
-  cmd: 'exec dumb-init python yelp/ordering/subscriptions/sfn_activities/cancel/handle_cancel_validation_error.py --no-daemon start'
+  cmd: 'exec dumb-init python yelp/ordering/subscriptions/sfn_activities/cancel/handle_cancel_validation_error.py --no-daemon
+    start'
 
 sfn_subs_cancel_cancel_order:
   <<: *sfn_subscription_billing_worker
@@ -460,11 +485,13 @@ sfn_subs_update_finalize_update:
 
 sfn_subs_update_handle_critical_error:
   <<: *sfn_subscription_billing_worker
-  cmd: 'exec dumb-init python yelp/ordering/subscriptions/sfn_activities/update/handle_update_critical_error.py --no-daemon start'
+  cmd: 'exec dumb-init python yelp/ordering/subscriptions/sfn_activities/update/handle_update_critical_error.py --no-daemon
+    start'
 
 sfn_subs_update_handle_validation_error:
   <<: *sfn_subscription_billing_worker
-  cmd: 'exec dumb-init python yelp/ordering/subscriptions/sfn_activities/update/handle_update_validation_error.py --no-daemon start'
+  cmd: 'exec dumb-init python yelp/ordering/subscriptions/sfn_activities/update/handle_update_validation_error.py --no-daemon
+    start'
 
 sfn_subs_update_update_order:
   <<: *sfn_subscription_billing_worker
@@ -527,7 +554,8 @@ sfn_payment_collection_complete_worker:
 
 prepaid_create_payment_program_feature:
   instances: 5
-  cmd: 'exec dumb-init python yelp/ordering/batch/step_functions/activities/prepaid/create_program_and_feature.py --no-daemon start'
+  cmd: 'exec dumb-init python yelp/ordering/batch/step_functions/activities/prepaid/create_program_and_feature.py --no-daemon
+    start'
   cpus: 0.5
   mem: 2000
   disk: 1200
@@ -669,7 +697,8 @@ business_merge_kew_worker: &data_quality_worker
     alert_after: 10m
     team: data_quality_lowurgency
   instances: 1
-  cmd: 'exec dumb-init python /nail/live/yelp/batch/kew_workers/business_merge_worker.py --max-task-time=36000 --no-daemon start'
+  cmd: 'exec dumb-init python /nail/live/yelp/batch/kew_workers/business_merge_worker.py --max-task-time=36000 --no-daemon
+    start'
 
 alternate_address_geocode_kew_worker:
   <<: *data_quality_worker
@@ -732,7 +761,8 @@ user_details_kew_worker: &readerx_kew_worker
 
 user_recent_location_kew_worker:
   <<: *readerx_kew_worker
-  cmd: 'exec dumb-init python /nail/live/yelp/batch/kew_workers/user_recent_location_worker.py --max-collect-time=1 --no-daemon start'
+  cmd: 'exec dumb-init python /nail/live/yelp/batch/kew_workers/user_recent_location_worker.py --max-collect-time=1 --no-daemon
+    start'
 
 biz_photo_update_caches_kew_worker:
   <<: *readerx_kew_worker
@@ -760,124 +790,164 @@ collections_report_kew_worker: &revenue_report
     slack_channels: ['revenue-notifications']
   deploy_group: 'stageg'
   instances: 3
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=collections_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=collections_report
+    --no-daemon start
 metro_penetration_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=metro_penetration_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=metro_penetration_report
+    --no-daemon start
 currency_exchange_rate_daily_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=currency_exchange_rate_daily --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=currency_exchange_rate_daily
+    --no-daemon start
 ad_delivery_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=ad_delivery_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=ad_delivery_report
+    --no-daemon start
 transaction_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=transaction_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=transaction_report
+    --no-daemon start
 credit_card_transaction_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=credit_card_transaction_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=credit_card_transaction_report
+    --no-daemon start
 onoff_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=onoff_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=onoff_report --no-daemon
+    start
 business_advertising_campaign_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=business_advertising_campaign_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=business_advertising_campaign_report
+    --no-daemon start
 business_changes_queue_worker_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=business_changes_queue_worker_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=business_changes_queue_worker_report
+    --no-daemon start
 adjustment_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=adjustment_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=adjustment_report
+    --no-daemon start
 vouchers_open_payment_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=vouchers_open_payment_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=vouchers_open_payment_report
+    --no-daemon start
 deals_account_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=deals_account_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=deals_account_report
+    --no-daemon start
 vouchers_payout_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=vouchers_payout_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=vouchers_payout_report
+    --no-daemon start
 uninvoiced_voucher_transaction_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=uninvoiced_voucher_transaction_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=uninvoiced_voucher_transaction_report
+    --no-daemon start
 revenue_share_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=revenue_share_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=revenue_share_report
+    --no-daemon start
 international_inventory_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=international_inventory_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=international_inventory_report
+    --no-daemon start
 direct_debit_instruction_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=direct_debit_instruction_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=direct_debit_instruction_report
+    --no-daemon start
 direct_debit_transaction_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=direct_debit_transaction_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=direct_debit_transaction_report
+    --no-daemon start
 competitor_targeting_inventory_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=competitor_targeting_inventory_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=competitor_targeting_inventory_report
+    --no-daemon start
 ad_driven_leads_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=ad_driven_leads_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=ad_driven_leads_report
+    --no-daemon start
 account_performance_timebased_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=account_performance_timebased_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=account_performance_timebased_report
+    --no-daemon start
 account_businesses_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=account_businesses_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=account_businesses_report
+    --no-daemon start
 account_export_campaigns_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=account_export_campaigns_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=account_export_campaigns_report
+    --no-daemon start
 account_export_house_campaigns_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=account_export_house_campaigns_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=account_export_house_campaigns_report
+    --no-daemon start
 account_invoice_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=account_invoice_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=account_invoice_report
+    --no-daemon start
 uninvoiced_transaction_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=uninvoiced_transaction_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=uninvoiced_transaction_report
+    --no-daemon start
 cpc_audit_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=cpc_audit_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=cpc_audit_report
+    --no-daemon start
 paying_customer_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=paying_customer_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=paying_customer_report
+    --no-daemon start
 adyen_payment_transaction_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=adyen_payment_transaction_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=adyen_payment_transaction_report
+    --no-daemon start
 refund_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=refund_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=refund_report --no-daemon
+    start
 transaction_extract_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=transaction_extract_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=transaction_extract_report
+    --no-daemon start
 customer_data_extract_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=customer_data_extract --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=customer_data_extract
+    --no-daemon start
 partner_revenue_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=partner_revenue_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=partner_revenue_report
+    --no-daemon start
 r2r_api_response_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=r2r_api_response_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=r2r_api_response_report
+    --no-daemon start
 partner_biz_claim_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=partner_biz_claim_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=partner_biz_claim_report
+    --no-daemon start
 business_container_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=business_container_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=business_container_report
+    --no-daemon start
 overpaid_payment_accounts_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=overpaid_payment_accounts_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=overpaid_payment_accounts_report
+    --no-daemon start
 partner_payout_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=partner_payout_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=partner_payout_report
+    --no-daemon start
 chain_sales_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=chain_sales_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=chain_sales_report
+    --no-daemon start
 ad_inventory_report_kew_worker:
   <<: *revenue_report
-  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=ad_inventory_report --no-daemon start
+  cmd: exec dumb-init python /nail/live/yelp/batch/kew_workers/admin_report_request_worker.py --task-name=ad_inventory_report
+    --no-daemon start
 
 # ---- Begin messaging team kew workers ----
 
@@ -922,7 +992,8 @@ update_ad_spend_worker:
   cpus: 1
   instances: 3
   mem: 1000
-  cmd: 'exec dumb-init python batch/kew_workers/ads/update_ad_spend_worker.py --no-daemon --num-messages=1 --max-collect-time=5 start'
+  cmd: 'exec dumb-init python batch/kew_workers/ads/update_ad_spend_worker.py --no-daemon --num-messages=1 --max-collect-time=5
+    start'
   deploy_group: 'stageg'
   bounce_method: 'brutal'
   monitoring:
@@ -1001,52 +1072,60 @@ di_business_update_job_completion_low_priority_kew_worker:
   <<: *di_worker_template
   instances: 1
   cpus: 0.2
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/priority_queue/business_update_job_completion_low_worker.py --no-daemon --num-messages=1000 --max-collect-time=30 start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/priority_queue/business_update_job_completion_low_worker.py
+    --no-daemon --num-messages=1000 --max-collect-time=30 start'
 
 di_business_update_job_completion_medium_priority_kew_worker:
   <<: *di_worker_template
   instances: 1
   cpus: 0.2
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/priority_queue/business_update_job_completion_medium_worker.py --no-daemon --num-messages=1000 --max-collect-time=30 start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/priority_queue/business_update_job_completion_medium_worker.py
+    --no-daemon --num-messages=1000 --max-collect-time=30 start'
 
 di_business_update_job_completion_high_priority_kew_worker:
   <<: *di_worker_template
   instances: 1
   cpus: 0.2
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/priority_queue/business_update_job_completion_high_worker.py --no-daemon --num-messages=500 --max-collect-time=15 start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/priority_queue/business_update_job_completion_high_worker.py
+    --no-daemon --num-messages=500 --max-collect-time=15 start'
 
 di_partner_data_kew_worker:
   <<: *di_worker_template
   instances: 1
   cpus: 0.6
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/partner_data_worker.py --no-daemon --num-messages=2 start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/partner_data_worker.py --no-daemon --num-messages=2
+    start'
 
 di_business_update_authorization_low_priority_kew_worker:
   <<: *di_worker_template
   instances: 1
   cpus: 0.6
   disk: 3072
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/priority_queue/business_update_authorization_biz_match_low_worker.py --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/priority_queue/business_update_authorization_biz_match_low_worker.py
+    --no-daemon start'
 
 di_business_update_authorization_medium_priority_kew_worker:
   <<: *di_worker_template
   instances: 1
   cpus: 0.6
   disk: 3072
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/priority_queue/business_update_authorization_all_medium_worker.py --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/priority_queue/business_update_authorization_all_medium_worker.py
+    --no-daemon start'
 
 di_business_update_authorization_high_priority_kew_worker:
   <<: *di_worker_template
   instances: 1
   cpus: 0.6
   disk: 3072
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/priority_queue/business_update_authorization_no_biz_match_high_worker.py --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/priority_queue/business_update_authorization_no_biz_match_high_worker.py
+    --no-daemon start'
 
 di_business_attribute_update_worker_kew_worker:
   <<: *di_worker_template
   instances: 1
   cpus: 0.6
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/biz_attribute_update_worker.py --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/biz_attribute_update_worker.py --no-daemon
+    start'
 
 di_attribute_worker_orders_attribute_kew_worker:
   <<: *di_worker_template
@@ -1055,7 +1134,8 @@ di_attribute_worker_orders_attribute_kew_worker:
     team: contributions
     page: false
     runbook: "https://confluence.yelpcorp.com/display/PSHIP/Data+Ingestion"
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/orders_attribute_worker.py --no-daemon --no-notification start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/orders_attribute_worker.py --no-daemon --no-notification
+    start'
 
 di_photo_kew_worker:
   <<: *di_worker_template
@@ -1065,7 +1145,8 @@ di_photo_kew_worker:
 di_delete_photo_kew_worker:
   <<: *di_worker_template
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/delete_photo_attribute_worker.py --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/delete_photo_attribute_worker.py --no-daemon
+    start'
 
 di_menu_kew_worker:
   <<: *di_worker_template
@@ -1090,7 +1171,8 @@ di_partner_biz_claim_kew_worker:
 di_partner_biz_claim_revoke_kew_worker:
   <<: *di_worker_template
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/partner_biz_claim_revoke_worker.py --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/partner_biz_claim_revoke_worker.py --no-daemon
+    start'
 
 di_reseller_authorization_kew_worker:
   <<: *di_worker_template
@@ -1100,7 +1182,8 @@ di_reseller_authorization_kew_worker:
 di_attribute_worker_reseller_attribute:
   <<: *di_worker_template
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/reseller_attribute_update_worker.py --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/reseller_attribute_update_worker.py --no-daemon
+    start'
 
 di_reseller_job_request_persist_kew_worker:
   <<: *di_worker_template
@@ -1110,7 +1193,8 @@ di_reseller_job_request_persist_kew_worker:
 di_reseller_job_completion_kew_worker:
   <<: *di_worker_template
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/reseller_job_completion_worker.py --no-daemon --num-messages=1000 --max-collect-time=30 start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/reseller_job_completion_worker.py --no-daemon --num-messages=1000
+    --max-collect-time=30 start'
 
 di_attribute_worker_video:
   <<: *di_worker_template
@@ -1125,7 +1209,8 @@ di_attribute_worker_message_the_business:
 di_attribute_worker_admin_business_note:
   <<: *di_worker_template
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/admin_business_note_worker.py --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/admin_business_note_worker.py --no-daemon
+    start'
 
 di_attribute_worker_rep_man_alert:
   <<: *di_worker_template
@@ -1135,7 +1220,8 @@ di_attribute_worker_rep_man_alert:
     page: false
     team: spam
     runbook: "https://confluence.yelpcorp.com/display/Spam/Reputation+Management+Alert"
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/rep_man_alert_state_update_worker.py --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/rep_man_alert_state_update_worker.py --no-daemon
+    start'
 
 
 di_attribute_worker_charge_back_data_update:
@@ -1145,7 +1231,8 @@ di_attribute_worker_charge_back_data_update:
     page: false
     team: payments_high
     runbook: "https://confluence.yelpcorp.com/display/Fraud#FraudHome-Chargebacks"
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/charge_back_data_update_worker.py --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/charge_back_data_update_worker.py --no-daemon
+    start'
 
 di_attribute_worker_check_and_wire_transfer_update:
   <<: *di_worker_template
@@ -1153,7 +1240,8 @@ di_attribute_worker_check_and_wire_transfer_update:
   monitoring:
     page: false
     team: payments_high
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/check_and_wire_transfer_update_worker.py --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/check_and_wire_transfer_update_worker.py
+    --no-daemon start'
 
 di_attribute_worker_promotion_campaign:
   <<: *di_worker_template
@@ -1162,7 +1250,8 @@ di_attribute_worker_promotion_campaign:
     page: false
     slack_channels: biz-money
     team: biz_money
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/promotion_campaign_worker.py --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/promotion_campaign_worker.py --no-daemon
+    start'
 
 di_attribute_worker_ad_campaign_update:
   <<: *di_worker_template
@@ -1170,22 +1259,26 @@ di_attribute_worker_ad_campaign_update:
     page: false
     team: ad_backend_noncritical
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/ad_campaign_update_worker.py --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/ad_campaign_update_worker.py --no-daemon
+    start'
 
 di_business_attribute_pending_marked_applied_kew_worker:
   <<: *di_worker_template
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/business_attribute_pending_marked_applied_worker.py --no-daemon --num-messages=1000 --max-collect-time=10 start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/business_attribute_pending_marked_applied_worker.py --no-daemon
+    --num-messages=1000 --max-collect-time=10 start'
 
 di_business_attribute_pending_marked_reviewed_kew_worker:
   <<: *di_worker_template
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/business_attribute_pending_marked_reviewed_worker.py --no-daemon --num-messages=1000 --max-collect-time=10 start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/business_attribute_pending_marked_reviewed_worker.py --no-daemon
+    --num-messages=1000 --max-collect-time=10 start'
 
 di_attribute_worker_biz_user_attribute:
   <<: *di_worker_template
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/biz_user_attribute_worker.py --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/biz_user_attribute_worker.py --no-daemon
+    start'
 
 di_attribute_worker_create_attribute:
   <<: *di_worker_template
@@ -1203,7 +1296,8 @@ di_attribute_worker_deals_payout:
 di_attribute_worker_container_attribute_update:
   <<: *di_worker_template
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/container_attribute_update_worker.py --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/container_attribute_update_worker.py --no-daemon
+    start'
 
 di_attribute_worker_desktop_cta:
   <<: *di_worker_template
@@ -1309,12 +1403,14 @@ di_job_completion_timer:
 di_attribute_worker_special_offer:
   <<: *di_worker_template
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/special_offer_attribute_update_worker.py --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/special_offer_attribute_update_worker.py
+    --no-daemon start'
 
 di_webhook_receipt_worker:
   <<: *di_worker_template
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/webhook_receipt_worker.py  --num-messages=20 --max-collect-time=10 --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/webhook_receipt_worker.py  --num-messages=20 --max-collect-time=10
+    --no-daemon start'
 
 di_payment_account_update_worker:
   <<: *di_worker_template
@@ -1323,7 +1419,8 @@ di_payment_account_update_worker:
     team: biz_national
     runbook: "https://yelpwiki.yelpcorp.com/display/BIZNAT/Runbook+-+Payment+Account+Update+Kew+Worker"
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/payment_account_update_worker.py --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/data_ingestion/attribute_workers/payment_account_update_worker.py --no-daemon
+    start'
 
 
 
@@ -1376,7 +1473,8 @@ send_add_email_confirmation_kew_worker:
     runbook: "http://y/notif-runbook"
   deploy_group: 'stageg'
   instances: 1
-  cmd: 'exec dumb-init python /nail/live/yelp/batch/kew_workers/send_add_email_confirmation_worker.py --no-notification --no-daemon start'
+  cmd: 'exec dumb-init python /nail/live/yelp/batch/kew_workers/send_add_email_confirmation_worker.py --no-notification --no-daemon
+    start'
 
 confirmation_kew_worker:
   cpus: 1
@@ -1552,7 +1650,9 @@ elasticindexer_review_suggestion:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python batch/elasticindexer/parallel_datapipe_elastic_indexer.py --client-namespace=elasticindexer_review_suggestion_stageg --indexer-group=review_suggestions --position-key=elasticindexer_review_suggestion_stageg_position --checkpoints-log-name=elasticindexer_review_suggestion_stageg_timing_checkpoints --num-workers=2 --official-es-client --es-service-name=elasticsearch-review-suggestions --managed-queues --no-daemon start'
+  cmd: 'exec dumb-init python batch/elasticindexer/parallel_datapipe_elastic_indexer.py --client-namespace=elasticindexer_review_suggestion_stageg
+    --indexer-group=review_suggestions --position-key=elasticindexer_review_suggestion_stageg_position --checkpoints-log-name=elasticindexer_review_suggestion_stageg_timing_checkpoints
+    --num-workers=2 --official-es-client --es-service-name=elasticsearch-review-suggestions --managed-queues --no-daemon start'
 
 log_based_indexer:
   cpus: 0.5
@@ -1562,7 +1662,8 @@ log_based_indexer:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python batch/elasticindexer/review_suggestion/log_based_indexer.py --cluster=uswest1-stageg --topics=biz_attribute,call,directions,map,message_the_business,ytp_order_event,url_visit --no-daemon start'
+  cmd: 'exec dumb-init python batch/elasticindexer/review_suggestion/log_based_indexer.py --cluster=uswest1-stageg --topics=biz_attribute,call,directions,map,message_the_business,ytp_order_event,url_visit
+    --no-daemon start'
 
 log_based_indexer_east:
   cpus: 0.5
@@ -1572,7 +1673,8 @@ log_based_indexer_east:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/elasticindexer/review_suggestion/log_based_indexer_worker.py --task-suffix=east --num-messages=1 --max-collect-time=120 --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/elasticindexer/review_suggestion/log_based_indexer_worker.py --task-suffix=east
+    --num-messages=1 --max-collect-time=120 --no-daemon start'
 
 log_based_indexer_pnw:
   cpus: 0.5
@@ -1582,7 +1684,8 @@ log_based_indexer_pnw:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/elasticindexer/review_suggestion/log_based_indexer_worker.py --task-suffix=pnw --num-messages=1 --max-collect-time=120 --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/elasticindexer/review_suggestion/log_based_indexer_worker.py --task-suffix=pnw
+    --num-messages=1 --max-collect-time=120 --no-daemon start'
 
 log_based_indexer_west:
   cpus: 0.5
@@ -1592,7 +1695,8 @@ log_based_indexer_west:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python batch/kew_workers/elasticindexer/review_suggestion/log_based_indexer_worker.py --task-suffix=west --num-messages=1 --max-collect-time=120 --no-daemon start'
+  cmd: 'exec dumb-init python batch/kew_workers/elasticindexer/review_suggestion/log_based_indexer_worker.py --task-suffix=west
+    --num-messages=1 --max-collect-time=120 --no-daemon start'
 
 ####################################
 #   START DW_ETL_TASK_WORKERS      #
@@ -1790,7 +1894,8 @@ init_user_weekly_subscriptions_kew_worker:
     page: false
     team: contributions
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.init_user_weekly_subscriptions_worker --max-task-time=36000 --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.init_user_weekly_subscriptions_worker --max-task-time=36000 --no-daemon
+    start'
 
 platform_order_recruit_ghost_user_merge_worker:
   cpus: 1
@@ -1925,7 +2030,8 @@ update_ad_store_worker_kew:
   deploy_group: 'stageg'
   min_instances: 2
   max_instances: 10
-  cmd: 'exec dumb-init python -m batch.kew_workers.ads.update_ad_store_worker --max-collect-time=10 --num-messages=100 --no-crash-worker-on-failure --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.ads.update_ad_store_worker --max-collect-time=10 --num-messages=100 --no-crash-worker-on-failure
+    --no-daemon start'
 
 remove_from_ad_store_worker_kew:
   cpus: 0.1
@@ -1936,7 +2042,8 @@ remove_from_ad_store_worker_kew:
     team: ad_delivery
   deploy_group: 'stageg'
   instances: 1
-  cmd: 'exec dumb-init python -m batch.kew_workers.ads.remove_from_ad_store_worker --max-collect-time=5 --num-messages=1 --no-crash-worker-on-failure --no-daemon start'
+  cmd: 'exec dumb-init python -m batch.kew_workers.ads.remove_from_ad_store_worker --max-collect-time=5 --num-messages=1 --no-crash-worker-on-failure
+    --no-daemon start'
 
 # ---- End Ad Delivery kew workers ----
 
@@ -2050,7 +2157,13 @@ elasticindexer_test_parallel_uswest1_stageg: &parallel_datapipe_elastic_indexer
     HEARTBEAT_ARGS: '' # Arguments for heartbeat acking
     EXCEPTION_ARGS: '' # Exception retries etc
     ADDITIONAL_ARGS: ''
-    CMD: 'exec dumb-init --single-child --verbose python -m batch.elasticindexer.$INDEXER_BATCH --indexer-batch-name=$PAASTA_INSTANCE --client-namespace=`[ -n "$CLIENT_NAMESPACE" ] && printenv CLIENT_NAMESPACE || printenv PAASTA_INSTANCE` $INDEXER_ARGS $POSITION_STORAGE_ARGS `eval echo $WORKER_ARGS` --managed-queues $HEARTBEAT_ARGS $BACKEND_ARGS --silence-noisy-loggers --notify-email=$DEFAULT_NOTIFIERS $NOTIFICATION_ARGS --checkpoints-log-name=`printenv PAASTA_INSTANCE`_timing_checkpoints --sensu-check-name=`[ -n "$SENSU_CHECK_NAME" ] && printenv SENSU_CHECK_NAME || printenv PAASTA_INSTANCE` --sensu-team=$SENSU_TEAM $HEALTHCHECK_ARGS $SENSU_ARGS --meteorite `[ -n "$METEORITE" ] && printenv METEORITE  || printenv PAASTA_INSTANCE` --indexer-event-chunk-size=$CHUNK_SIZE  $EXCEPTION_ARGS $ADDITIONAL_ARGS --no-daemon start -v'
+    CMD: 'exec dumb-init --single-child --verbose python -m batch.elasticindexer.$INDEXER_BATCH --indexer-batch-name=$PAASTA_INSTANCE
+      --client-namespace=`[ -n "$CLIENT_NAMESPACE" ] && printenv CLIENT_NAMESPACE || printenv PAASTA_INSTANCE` $INDEXER_ARGS
+      $POSITION_STORAGE_ARGS `eval echo $WORKER_ARGS` --managed-queues $HEARTBEAT_ARGS $BACKEND_ARGS --silence-noisy-loggers
+      --notify-email=$DEFAULT_NOTIFIERS $NOTIFICATION_ARGS --checkpoints-log-name=`printenv PAASTA_INSTANCE`_timing_checkpoints
+      --sensu-check-name=`[ -n "$SENSU_CHECK_NAME" ] && printenv SENSU_CHECK_NAME || printenv PAASTA_INSTANCE` --sensu-team=$SENSU_TEAM
+      $HEALTHCHECK_ARGS $SENSU_ARGS --meteorite `[ -n "$METEORITE" ] && printenv METEORITE  || printenv PAASTA_INSTANCE` --indexer-event-chunk-size=$CHUNK_SIZE  $EXCEPTION_ARGS
+      $ADDITIONAL_ARGS --no-daemon start -v'
   monitoring: # Override this as required
     page: false
     team: distsys_data
@@ -2122,12 +2235,16 @@ yelp_main_2_stage_asts_spolt:
   env:
     SERVICE_ENV_CONFIG_PATH: /nail/srv/configs/paastorm_asts.yaml
     SERVICE_CONFIG_PATH: /nail/srv/configs/paastorm_asts.yaml
-  cmd: 'exec dumb-init ./batch/datapipeline/run_2_stage_paastorm_asts.sh --fixed-namespaces="stageg.refresh_primary.yelp" --out-namespace="stageg.refresh_primary.yelp.yelp_main_transformed" --notify-email="data-pipeline-team+batch@yelp.com" --no-daemon start'
+  cmd: 'exec dumb-init ./batch/datapipeline/run_2_stage_paastorm_asts.sh --fixed-namespaces="stageg.refresh_primary.yelp"
+    --out-namespace="stageg.refresh_primary.yelp.yelp_main_transformed" --notify-email="data-pipeline-team+batch@yelp.com"
+    --no-daemon start'
   instances: 2
 
 yelp_main_application_specific_transformers:
   <<: *ym_ast_template
-  cmd: 'exec dumb-init python -m batch.datapipeline.yelp_main_transformer_daemon --in-namespace="stageg.refresh_primary.yelp" --out-namespace="stageg.refresh_primary.yelp.yelp_main_transformed" --producer-name="asts_stageg" --consumer-name="asts_stageg" --consumer-count=100 --disable-group-sha --refresh-topics-interval-seconds=86400 --no-daemon -v start'
+  cmd: 'exec dumb-init python -m batch.datapipeline.yelp_main_transformer_daemon --in-namespace="stageg.refresh_primary.yelp"
+    --out-namespace="stageg.refresh_primary.yelp.yelp_main_transformed" --producer-name="asts_stageg" --consumer-name="asts_stageg"
+    --consumer-count=100 --disable-group-sha --refresh-topics-interval-seconds=86400 --no-daemon -v start'
   instances: 0
 
 
@@ -2181,7 +2298,8 @@ biz_user_quick_links_kew_worker:
     runbook: "https://confluence.yelpcorp.com/display/BIZENG/BizUserQuickLinks"
   deploy_group: 'stageg'
   instances: 3
-  cmd: 'exec dumb-init python /nail/live/yelp/batch/kew_workers/biz_user_quick_links_worker.py --no-daemon --no-notification start'
+  cmd: 'exec dumb-init python /nail/live/yelp/batch/kew_workers/biz_user_quick_links_worker.py --no-daemon --no-notification
+    start'
 
 # ---- End Biz Growth kew workers ----
 
